@@ -97,55 +97,109 @@ async function authorize() {
 //   });
 // }
 
+// authorize().then(listEvents).catch(console.error);
+
+
 /**
  * Create a new event with a Google Meet link.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
+// async function createMeetingEvent(auth) {
+//   const calendar = google.calendar({ version: "v3", auth });
+
+//   const eventStartTime = new Date();
+//   eventStartTime.setMinutes(eventStartTime.getMinutes() + 30); // Schedule the meeting 30 minutes from now
+//   const eventEndTime = new Date(eventStartTime.getTime() + 60 * 60 * 1000); // Meeting duration: 1 hour
+
+//   const event = {
+//     summary: "Google Meet Event",
+//     description: "Meeting description here",
+//     start: {
+//       dateTime: eventStartTime.toISOString(),
+//       timeZone: "UTC", // Adjust this based on your timezone
+//     },
+//     end: {
+//       dateTime: eventEndTime.toISOString(),
+//       timeZone: "UTC", // Adjust this based on your timezone
+//     },
+//     conferenceData: {
+//       createRequest: {
+//         requestId: Math.random().toString(), // Generate a unique request ID
+//       },
+//     },
+//   };
+
+//   try {
+//     const res = await calendar.events.insert({
+//       calendarId: "primary",
+//       conferenceDataVersion: 1,
+//       resource: event,
+//     });
+
+//     console.log("Meeting created:", res.data.htmlLink);
+//     if (res.data.conferenceData && res.data.conferenceData.entryPoints) {
+//       console.log(
+//         "Google Meet link:",
+//         res.data.conferenceData.entryPoints[0].uri
+//       );
+//     }
+//   } catch (error) {
+//     console.error("Error creating meeting:", error.message);
+//   }
+// }
+
+// Call the createMeetingEvent function after authorization
+// authorize().then(createMeetingEvent).catch(console.error);
+
+/**
+ * Create a new event with Google Meet details and invitees.
+ * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ */
 async function createMeetingEvent(auth) {
-  const calendar = google.calendar({ version: "v3", auth });
+  const calendar = google.calendar({ version: 'v3', auth });
 
   const eventStartTime = new Date();
   eventStartTime.setMinutes(eventStartTime.getMinutes() + 30); // Schedule the meeting 30 minutes from now
   const eventEndTime = new Date(eventStartTime.getTime() + 60 * 60 * 1000); // Meeting duration: 1 hour
 
   const event = {
-    summary: "Google Meet Event",
-    description: "Meeting description here",
+    summary: 'Meeting with Google Meet',
+    description: 'Meeting description here',
     start: {
       dateTime: eventStartTime.toISOString(),
-      timeZone: "UTC", // Adjust this based on your timezone
+      timeZone: 'UTC', // Adjust this based on your timezone
     },
     end: {
       dateTime: eventEndTime.toISOString(),
-      timeZone: "UTC", // Adjust this based on your timezone
+      timeZone: 'UTC', // Adjust this based on your timezone
     },
     conferenceData: {
       createRequest: {
         requestId: Math.random().toString(), // Generate a unique request ID
       },
     },
+    attendees: [
+      { email: 'barnabassampawin@gmail.com' }, // Add your invitees' email addresses
+      { email: 'a81703478@gmail.com' },
+    ],
   };
 
   try {
     const res = await calendar.events.insert({
-      calendarId: "primary",
+      calendarId: 'primary',
       conferenceDataVersion: 1,
+      sendNotifications: true, // Sends out email notifications to attendees
       resource: event,
     });
 
-    console.log("Meeting created:", res.data.htmlLink);
+    console.log('Meeting created:', res.data.htmlLink);
     if (res.data.conferenceData && res.data.conferenceData.entryPoints) {
-      console.log(
-        "Google Meet link:",
-        res.data.conferenceData.entryPoints[0].uri
-      );
+      console.log('Google Meet link:', res.data.conferenceData.entryPoints[0].uri);
     }
   } catch (error) {
-    console.error("Error creating meeting:", error.message);
+    console.error('Error creating meeting:', error.message);
   }
 }
 
 // Call the createMeetingEvent function after authorization
 authorize().then(createMeetingEvent).catch(console.error);
-
-// authorize().then(listEvents).catch(console.error);
