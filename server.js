@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios')
 const path = require('path');
 const app = express();
 const { authenticate } = require('@google-cloud/local-auth');
@@ -70,13 +71,13 @@ app.post('/create-meeting', async (req, res) => {
     });
     await createMeetingEvent(client, eventData);
 
-    res.status(200).json({ 
+    return res.status(200).json({ 
       status: 200,
       message: 'Meeting created successfully.'
     });
   } catch (error) {
     console.error('Error:', error.message);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       status: 500,
       error: 'An error occurred while creating the meeting.'
     });
