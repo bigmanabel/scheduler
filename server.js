@@ -1,6 +1,7 @@
+require('dotenv').config();
 const express = require('express');
-const axios = require('axios')
 const path = require('path');
+const https = require('https');
 const app = express();
 const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
@@ -82,6 +83,92 @@ app.post('/create-meeting', async (req, res) => {
       error: 'An error occurred while creating the meeting.'
     });
   }
+});
+
+const PAYSTACK_SECRET_KEY = process.env.SECRET;
+
+// Create a new subscription plan
+app.post('/create-plan', async (req, res) => {
+    const { name, amount, interval } = req.body;
+
+    const params = JSON.stringify({
+      name,
+      interval,
+      amount,
+    });
+  
+    const options = {
+      hostname: "api.paystack.co",
+      port: 443,
+      path: "/plan",
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.SECRET}`,
+        "Content-Type": "application/json",
+      },
+    };
+  
+    const paystackRequest = https.request(options, paystackRes => {
+      let data = '';
+  
+      paystackRes.on('data', (chunk) => {
+        data += chunk;
+      });
+  
+      paystackRes.on('end', () => {
+        const responseData = JSON.parse(data);
+        res.json(responseData);
+      });
+    }).on('error', error => {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    });
+  
+    paystackRequest.write(params);
+    paystackRequest.end();
+});
+
+// Initiate payment for a subscription plan
+app.post('/initiate-payment', async (req, res) => {
+    const { email, plan, amount } = req.body;
+
+    const requestData = {
+      email,
+      amount,
+      plan
+    };
+  
+    const params = JSON.stringify(requestData);
+  
+    const options = {
+      hostname: 'api.paystack.co',
+      port: 443,
+      path: '/transaction/initialize',
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SECRET}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  
+    const paystackRequest = https.request(options, paystackRes => {
+      let data = '';
+  
+      paystackRes.on('data', (chunk) => {
+        data += chunk;
+      });
+  
+      paystackRes.on('end', () => {
+        const responseData = JSON.parse(data);
+        res.json(responseData);
+      });
+    }).on('error', error => {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    });
+  
+    paystackRequest.write(params);
+    paystackRequest.end();
 });
 
 app.listen(3000, () => {
